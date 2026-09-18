@@ -453,7 +453,7 @@
 
         function startQRPayment() {
             currentSessionId = Date.now().toString(); const serverIp = "192.168.100.7"; 
-            const paymentUrl = `http://${serverIp}:3000/ewallet.html?amount=${currentCents}&session=${currentSessionId}`;
+            const paymentUrl = `https://salvation-kiosk-server.onrender.com/ewallet.html?amount=${currentCents}&session=${currentSessionId}`;
             document.getElementById("qr-code-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}&margin=10`;
             switchScreen('qr-processing-screen'); startPaymentTimer();
         }
