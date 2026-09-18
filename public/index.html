@@ -12,9 +12,9 @@
     
     <style>
         * { box-sizing: border-box; font-family: 'Helvetica Neue', Arial, sans-serif; user-select: none; }
-        body { margin: 0; padding: 0; background-color: #0a0a0a; color: #f4f4f5; overflow: hidden; }
+        body { margin: 0; padding: 0; background-color: #0a0a0a; color: #f4f4f5; overflow-x: hidden; }
         
-        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; text-align: center; overflow-y: auto; }
         .active { display: flex; }
         
         h1 { font-size: 4rem; font-weight: 200; letter-spacing: 8px; margin-bottom: 10px; text-transform: uppercase; color: #ffffff; }
@@ -38,7 +38,7 @@
         .dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #525252; transition: 0.2s; }
         .dot.filled { background-color: #ffffff; border-color: #ffffff; box-shadow: 0 0 10px #ffffff; }
 
-        .admin-btn { background-color: #121212; border: 1px solid #262626; color: white; padding: 25px 40px; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin: 10px; width: 350px; transition: 0.2s; }
+        .admin-btn { background-color: #121212; border: 1px solid #262626; color: white; padding: 25px 40px; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin: 10px; width: 350px; max-width: 90vw; transition: 0.2s; }
         .admin-btn:active { background-color: #262626; }
         
         .form-group { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 20px; width: 100%; max-width: 600px; }
@@ -46,7 +46,7 @@
         .custom-input { width: 100%; background-color: #121212; border: 1px solid #262626; color: #fff; padding: 15px; font-size: 1.2rem; border-radius: 4px; text-align: left; cursor: pointer; min-height: 54px; white-space: pre-wrap; }
         .custom-input.focused { border-color: #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.2); }
         
-        .user-item { background-color: #121212; border: 1px solid #262626; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; width: 100%; text-align: left; }
+        .user-item { background-color: #121212; border: 1px solid #262626; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; width: 100%; text-align: left; margin-bottom: 15px; }
         .user-name { font-size: 1.2rem; color: #ffffff; margin-bottom: 5px; }
         .user-dept { font-size: 0.85rem; color: #737373; text-transform: uppercase; letter-spacing: 1px; }
         .del-btn { background-color: transparent; border: 1px solid #dc2626; color: #dc2626; padding: 12px 24px; border-radius: 4px; cursor: pointer; transition: 0.2s; letter-spacing: 1px; }
@@ -62,9 +62,9 @@
         .user-greeting { font-size: 0.9rem; color: #a1a1aa; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; text-align: left;}
         .user-greeting span { color: #ffffff; font-weight: 500; margin-left: 5px; }
         
-        #order-screen { background-color: #0a0a0a; flex-direction: row; padding-top: 80px; }
-        .menu-section { flex: 1.8; padding: 40px 60px; height: 100%; display: flex; flex-direction: column; }
-        .cart-section { flex: 1; padding: 40px; background-color: #121212; height: 100%; display: flex; flex-direction: column; align-items: center; border-left: 1px solid #262626; }
+        #order-screen { background-color: #0a0a0a; flex-direction: row; padding-top: 80px; align-items: stretch; justify-content: flex-start; }
+        .menu-section { flex: 1.8; padding: 40px 60px; display: flex; flex-direction: column; }
+        .cart-section { flex: 1; padding: 40px; background-color: #121212; display: flex; flex-direction: column; align-items: center; border-left: 1px solid #262626; }
         h2 { font-size: 1.1rem; font-weight: 400; text-transform: uppercase; letter-spacing: 3px; color: #737373; margin-top: 0; margin-bottom: 30px; width: 100%; text-align: left; border-bottom: 1px solid #262626; padding-bottom: 15px; }
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; align-content: start; }
         .menu-btn { background-color: #121212; border: 1px solid #262626; border-radius: 4px; padding: 25px; text-align: left; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; justify-content: space-between; height: 130px; }
@@ -80,6 +80,42 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .status-title { font-size: 2rem; font-weight: 200; color: #ffffff; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; }
         .status-sub { font-size: 1rem; color: #737373; font-weight: 300; letter-spacing: 1px; }
+
+        /* --- MOBILE RESPONSIVE LAYOUT --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; letter-spacing: 4px; }
+            .subtitle { font-size: 0.8rem; margin-bottom: 30px; letter-spacing: 2px; }
+            .screen { padding: 20px; height: auto; min-height: 100vh; justify-content: flex-start; }
+            
+            /* Start & Login centering */
+            #start-screen, #login-screen, #card-processing-screen, #qr-processing-screen, #success-screen { justify-content: center; padding-top: 0; }
+
+            /* Top Bar Stacking */
+            .top-bar { position: relative; flex-direction: column; gap: 15px; padding: 15px; align-items: stretch; border-bottom: none; }
+            .user-greeting { text-align: center; }
+
+            /* Order Screen Stacking */
+            #order-screen { flex-direction: column; padding: 0; }
+            .menu-section { padding: 20px 15px; flex: none; height: auto; }
+            .cart-section { padding: 20px 15px; border-left: none; border-top: 1px solid #262626; flex: none; height: auto; }
+            .menu-grid { grid-template-columns: 1fr; gap: 10px; }
+            .menu-btn { height: auto; flex-direction: row; align-items: center; padding: 20px; }
+            
+            /* Numpad & Buttons */
+            .numpad { max-width: 100%; gap: 8px; }
+            .num-btn { padding: 15px; }
+            .total-display { font-size: 3rem; }
+
+            /* Admin & Keyboard */
+            .admin-btn { margin: 5px 0; width: 100%; }
+            .admin-action-row { width: 100% !important; flex-direction: column; gap: 10px !important; margin: 0 !important; }
+            .admin-action-row button { margin: 0; }
+            .keyboard .key { padding: 15px 0; font-size: 1rem; }
+            .keyboard .key.wide { font-size: 0.75rem; padding: 15px 5px; }
+            
+            #payment-method-screen .menu-btn { height: auto; padding: 30px 20px; }
+            #qr-code-img { width: 80%; max-width: 250px; }
+        }
     </style>
 </head>
 <body>
@@ -112,15 +148,15 @@
     </div>
 
     <!-- 3. ADMIN DASHBOARD -->
-    <div id="admin-screen" class="screen">
-        <h1 style="font-size: 3rem;">Command Node</h1>
+    <div id="admin-screen" class="screen" style="padding-top: 40px;">
+        <h1 style="font-size: 2.5rem;">Command Node</h1>
         <div class="subtitle">Administrator Access Granted</div>
         
-        <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 40px;">
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; width: 100%; max-width: 350px;">
             <button class="admin-btn" onclick="switchScreen('register-screen')">Register Personnel</button>
             <button class="admin-btn" onclick="openManageUsers()">Manage Personnel</button>
             
-            <div style="display: flex; gap: 20px; width: 350px; margin: 0 10px;">
+            <div class="admin-action-row" style="display: flex; gap: 15px; width: 100%;">
                 <button class="admin-btn" style="flex: 1; margin: 0; padding: 18px 10px; font-size: 0.9rem; border-color: #10b981; color: #10b981; background: transparent;" onclick="reconnectTerminal()">Restore Link</button>
                 <button class="admin-btn" style="flex: 1; margin: 0; padding: 18px 10px; font-size: 0.9rem; border-color: #f59e0b; color: #f59e0b; background: transparent;" onclick="disconnectTerminal()">Sever Link</button>
             </div>
@@ -131,14 +167,14 @@
 
     <!-- 4. MANAGE PERSONNEL SCREEN -->
     <div id="manage-screen" class="screen" style="justify-content: flex-start; padding-top: 60px;">
-        <h2 style="text-align: center; border: none; font-size: 1.5rem; margin-bottom: 40px;">Active Roster</h2>
-        <div id="user-list-container" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; max-height: 50vh;"></div>
-        <button class="num-btn clear" style="margin-top: 50px; padding: 15px 40px; background: transparent; border-color: #525252; color: #a1a1aa;" onclick="switchScreen('admin-screen')">Back to Command Node</button>
+        <h2 style="text-align: center; border: none; font-size: 1.5rem; margin-bottom: 20px;">Active Roster</h2>
+        <div id="user-list-container" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 60vh;"></div>
+        <button class="num-btn clear" style="margin-top: 30px; padding: 15px 40px; background: transparent; border-color: #525252; color: #a1a1aa; width: 100%; max-width: 350px;" onclick="switchScreen('admin-screen')">Back to Command Node</button>
     </div>
 
     <!-- 5. REGISTER PERSONNEL SCREEN -->
-    <div id="register-screen" class="screen" style="justify-content: flex-start; padding-top: 60px;">
-        <h2 style="text-align: center; border: none; font-size: 1.5rem; margin-bottom: 40px;">Add New Personnel</h2>
+    <div id="register-screen" class="screen" style="justify-content: flex-start; padding-top: 40px;">
+        <h2 style="text-align: center; border: none; font-size: 1.5rem; margin-bottom: 20px;">Add New Personnel</h2>
         
         <div class="form-group"><div class="form-label">Full Name</div><div class="custom-input focused" id="reg-name" onclick="setFocus('reg-name')"></div></div>
         <div class="form-group"><div class="form-label">Assigned Department</div><div class="custom-input" id="reg-dept" onclick="setFocus('reg-dept')"></div></div>
@@ -203,22 +239,21 @@
     </div>
 
     <!-- 7. PAYMENT METHOD SELECTION -->
-    <div id="payment-method-screen" class="screen">
+    <div id="payment-method-screen" class="screen" style="padding-top: 40px; justify-content: flex-start;">
         <h2 style="text-align: center; border: none; margin-bottom: 20px;">Select Payment Method</h2>
-        <div class="menu-grid" style="max-width: 600px; margin: 0 auto; gap: 30px;">
+        <div class="menu-grid" style="max-width: 600px; width: 100%; margin: 0 auto; gap: 20px;">
             
-            <!-- NEW: IDs added to the physical card button so we can grey it out -->
-            <button class="menu-btn" id="btn-card-pay" style="height: 240px; align-items: center; justify-content: center; background-color: #0a0a0a; transition: 0.3s;" onclick="startCardPayment()">
-                <div style="font-size: 3rem; margin-bottom: 20px; color: #dc2626;">◆</div>
+            <button class="menu-btn" id="btn-card-pay" style="height: auto; align-items: center; justify-content: center; background-color: #0a0a0a; transition: 0.3s; padding: 40px 20px;" onclick="startCardPayment()">
+                <div style="font-size: 3rem; margin-bottom: 15px; color: #dc2626;">◆</div>
                 <span class="service-title" id="card-pay-text" style="text-align: center; text-transform: uppercase; letter-spacing: 2px;">Credit / Debit / Mobile<br><span style="font-size: 0.8rem; font-weight: 300; color: #737373; margin-top: 10px; display: block;">Tap Card, Apple, or Google Pay</span></span>
             </button>
 
-            <button class="menu-btn" style="height: 240px; align-items: center; justify-content: center; background-color: #0a0a0a;" onclick="startQRPayment()">
-                <div style="font-size: 3rem; margin-bottom: 20px; color: #dc2626;">◇</div>
+            <button class="menu-btn" style="height: auto; align-items: center; justify-content: center; background-color: #0a0a0a; padding: 40px 20px;" onclick="startQRPayment()">
+                <div style="font-size: 3rem; margin-bottom: 15px; color: #dc2626;">◇</div>
                 <span class="service-title" style="text-align: center; text-transform: uppercase; letter-spacing: 2px;">Digital Wallet<br><span style="font-size: 0.8rem; font-weight: 300; color: #737373; margin-top: 10px; display: block;">Scan QR to pay securely</span></span>
             </button>
         </div>
-        <button class="num-btn clear" style="margin-top: 60px; padding: 15px 40px; background: transparent; border-color: #ef4444;" onclick="switchScreen('order-screen')">Back</button>
+        <button class="num-btn clear" style="margin-top: 40px; padding: 15px 40px; background: transparent; border-color: #ef4444; width: 100%; max-width: 350px;" onclick="switchScreen('order-screen')">Back</button>
     </div>
 
     <!-- 8. PROCESSING: NFC TERMINAL -->
@@ -249,19 +284,16 @@
     <script>
         const socket = io();
         
-        // --- NEW: DYNAMIC HARDWARE BUTTON LOCK ---
         socket.on('terminal_status_update', (data) => {
             const cardBtn = document.getElementById('btn-card-pay');
             const cardText = document.getElementById('card-pay-text');
             
             if (data.online) {
-                // Unlock the button
                 cardBtn.disabled = false;
                 cardBtn.style.opacity = '1';
                 cardBtn.style.cursor = 'pointer';
                 cardText.innerHTML = `Credit / Debit / Mobile<br><span style="font-size: 0.8rem; font-weight: 300; color: #737373; margin-top: 10px; display: block;">Tap Card, Apple, or Google Pay</span>`;
             } else {
-                // Grey out the button and disable clicking
                 cardBtn.disabled = true;
                 cardBtn.style.opacity = '0.3';
                 cardBtn.style.cursor = 'not-allowed';
@@ -452,10 +484,11 @@
         });
 
         function startQRPayment() {
-            currentSessionId = Date.now().toString(); const serverIp = "192.168.100.7"; 
+            currentSessionId = Date.now().toString(); 
             const paymentUrl = `https://salvation-kiosk-server.onrender.com/ewallet.html?amount=${currentCents}&session=${currentSessionId}`;
             document.getElementById("qr-code-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}&margin=10`;
-            switchScreen('qr-processing-screen'); startPaymentTimer();
+            switchScreen('qr-processing-screen'); 
+            startPaymentTimer();
         }
 
         socket.on("qr_payment_success", (data) => {
