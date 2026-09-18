@@ -1,0 +1,8 @@
+# Ignore secret environment variables
+.env
+
+# Ignore heavy Node modules
+node_modules/
+
+# Ignore the local database file so the live server starts fresh
+users.json

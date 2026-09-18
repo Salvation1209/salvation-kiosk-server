@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Salvation Inc. Terminal</title>
+    
+    <!-- Apple Native App Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Salvation POS">
+    
+    <style>
+        * { box-sizing: border-box; font-family: 'Helvetica Neue', Arial, sans-serif; user-select: none; }
+        body { margin: 0; padding: 0; background-color: #0a0a0a; color: #f4f4f5; overflow: hidden; }
+        
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .active { display: flex; }
+        
+        h1 { font-size: 4rem; font-weight: 200; letter-spacing: 8px; margin-bottom: 10px; text-transform: uppercase; color: #ffffff; }
+        .subtitle { font-size: 1rem; color: #dc2626; margin-bottom: 60px; letter-spacing: 4px; text-transform: uppercase; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: auto; width: 100%; max-width: 320px; }
+        .num-btn { background-color: #171717; border: 1px solid #262626; border-radius: 4px; font-size: 1.2rem; font-weight: 300; color: #f4f4f5; padding: 18px; cursor: pointer; transition: 0.1s; }
+        .num-btn:active { background-color: #262626; }
+        .num-btn.clear { color: #ef4444; }
+        
+        #notification-toast {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background-color: #121212; border-left: 4px solid #dc2626; color: #ffffff;
+            padding: 20px 40px; font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase;
+            border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transition: top 0.4s ease-in-out; z-index: 1000; display: flex; align-items: center; gap: 15px;
+        }
+        #notification-toast.show { top: 40px; }
+        #notification-toast.success { border-color: #10b981; }
+
+        .pin-dots { display: flex; gap: 20px; margin-bottom: 40px; }
+        .dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #525252; transition: 0.2s; }
+        .dot.filled { background-color: #ffffff; border-color: #ffffff; box-shadow: 0 0 10px #ffffff; }
+
+        .admin-btn { background-color: #121212; border: 1px solid #262626; color: white; padding: 25px 40px; font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin: 10px; width: 350px; transition: 0.2s; }
+        .admin-btn:active { background-color: #262626; }
+        
+        .form-group { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 20px; width: 100%; max-width: 600px; }
+        .form-label { font-size: 0.8rem; color: #737373; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .custom-input { width: 100%; background-color: #121212; border: 1px solid #262626; color: #fff; padding: 15px; font-size: 1.2rem; border-radius: 4px; text-align: left; cursor: pointer; min-height: 54px; white-space: pre-wrap; }
+        .custom-input.focused { border-color: #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.2); }
+        
+        .user-item { background-color: #121212; border: 1px solid #262626; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; width: 100%; text-align: left; }
+        .user-name { font-size: 1.2rem; color: #ffffff; margin-bottom: 5px; }
+        .user-dept { font-size: 0.85rem; color: #737373; text-transform: uppercase; letter-spacing: 1px; }
+        .del-btn { background-color: transparent; border: 1px solid #dc2626; color: #dc2626; padding: 12px 24px; border-radius: 4px; cursor: pointer; transition: 0.2s; letter-spacing: 1px; }
+        .del-btn:active { background-color: #dc2626; color: white; }
+
+        .keyboard { display: flex; flex-direction: column; gap: 10px; margin-top: 30px; width: 100%; max-width: 800px; }
+        .key-row { display: flex; justify-content: center; gap: 8px; }
+        .key { background-color: #171717; border: 1px solid #262626; color: #fff; border-radius: 4px; padding: 15px 0; font-size: 1.2rem; flex: 1; max-width: 60px; cursor: pointer; transition: 0.1s; }
+        .key.wide { max-width: 120px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .key:active { background-color: #3f3f46; }
+
+        .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262626; background-color: #0a0a0a; z-index: 10; }
+        .user-greeting { font-size: 0.9rem; color: #a1a1aa; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; text-align: left;}
+        .user-greeting span { color: #ffffff; font-weight: 500; margin-left: 5px; }
+        
+        #order-screen { background-color: #0a0a0a; flex-direction: row; padding-top: 80px; }
+        .menu-section { flex: 1.8; padding: 40px 60px; height: 100%; display: flex; flex-direction: column; }
+        .cart-section { flex: 1; padding: 40px; background-color: #121212; height: 100%; display: flex; flex-direction: column; align-items: center; border-left: 1px solid #262626; }
+        h2 { font-size: 1.1rem; font-weight: 400; text-transform: uppercase; letter-spacing: 3px; color: #737373; margin-top: 0; margin-bottom: 30px; width: 100%; text-align: left; border-bottom: 1px solid #262626; padding-bottom: 15px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; align-content: start; }
+        .menu-btn { background-color: #121212; border: 1px solid #262626; border-radius: 4px; padding: 25px; text-align: left; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; justify-content: space-between; height: 130px; }
+        .menu-btn:active { background-color: #171717; border-color: #dc2626; }
+        .service-title { font-size: 1.1rem; font-weight: 400; color: #f4f4f5; letter-spacing: 1px; }
+        .price-tag { color: #dc2626; font-size: 1.2rem; font-weight: 300; }
+        .invoice-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #737373; width: 100%; text-align: right; margin-bottom: 10px; }
+        .total-display { font-size: 4rem; font-weight: 200; color: #ffffff; margin-bottom: 30px; width: 100%; text-align: right; letter-spacing: -2px; }
+        .pay-btn { background-color: #dc2626; color: white; border: none; border-radius: 4px; padding: 22px; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 30px; }
+        .pay-btn:active { background-color: #b91c1c; }
+        .pay-btn:disabled { background-color: #262626; color: #525252; cursor: not-allowed; }
+        .spinner { border: 2px solid #262626; border-top: 2px solid #dc2626; border-radius: 50%; width: 70px; height: 70px; animation: spin 1s linear infinite; margin: 40px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-title { font-size: 2rem; font-weight: 200; color: #ffffff; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; }
+        .status-sub { font-size: 1rem; color: #737373; font-weight: 300; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <div id="notification-toast">
+        <span id="toast-icon">⚠️</span>
+        <span id="toast-message">System Notification</span>
+    </div>
+
+    <!-- 1. START SCREEN -->
+    <div id="start-screen" class="screen active" onclick="switchScreen('login-screen')">
+        <h1>Salvation Inc.</h1>
+        <div class="subtitle">Global Asset Terminal</div>
+        <div style="animation: fade 2.5s infinite; font-size: 0.9rem; color: #737373; text-transform: uppercase; letter-spacing: 3px;">Initialize Session</div>
+    </div>
+
+    <!-- 2. LOGIN SCREEN -->
+    <div id="login-screen" class="screen">
+        <div class="status-title" style="margin-bottom: 40px;">Authorization Required</div>
+        <div class="pin-dots">
+            <div class="dot" id="dot-1"></div><div class="dot" id="dot-2"></div>
+            <div class="dot" id="dot-3"></div><div class="dot" id="dot-4"></div>
+        </div>
+        <div class="numpad" style="margin-top: 0;">
+            <button class="num-btn" onclick="enterPin('1')">1</button><button class="num-btn" onclick="enterPin('2')">2</button><button class="num-btn" onclick="enterPin('3')">3</button>
+            <button class="num-btn" onclick="enterPin('4')">4</button><button class="num-btn" onclick="enterPin('5')">5</button><button class="num-btn" onclick="enterPin('6')">6</button>
+            <button class="num-btn" onclick="enterPin('7')">7</button><button class="num-btn" onclick="enterPin('8')">8</button><button class="num-btn" onclick="enterPin('9')">9</button>
+            <button class="num-btn clear" onclick="clearPin()">CLR</button><button class="num-btn" onclick="enterPin('0')">0</button><button class="num-btn clear" style="color: #737373;" onclick="resetKiosk()">EXIT</button>
+        </div>
+    </div>
+
+    <!-- 3. ADMIN DASHBOARD -->
+    <div id="admin-screen" class="screen">
+        <h1 style="font-size: 3rem;">Command Node</h1>
+        <div class="subtitle">Administrator Access Granted</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 40px;">
+            <button class="admin-btn" onclick="switchScreen('register-screen')">Register Personnel</button>
+            <button class="admin-btn" onclick="openManageUsers()">Manage Personnel</button>
+            
+            <div style="display: flex; gap: 20px; width: 350px; margin: 0 10px;">
+                <button class="admin-btn" style="flex: 1; margin: 0; padding: 18px 10px; font-size: 0.9rem; border-color: #10b981; color: #10b981; background: transparent;" onclick="reconnectTerminal()">Restore Link</button>
+                <button class="admin-btn" style="flex: 1; margin: 0; padding: 18px 10px; font-size: 0.9rem; border-color: #f59e0b; color: #f59e0b; background: transparent;" onclick="disconnectTerminal()">Sever Link</button>
+            </div>
+
+            <button class="admin-btn" style="border-color: #dc2626; color: #dc2626; background: transparent;" onclick="resetKiosk()">Terminate Session</button>
+        </div>
+    </div>
+
+    <!-- 4. MANAGE PERSONNEL SCREEN -->
+    <div id="manage-screen" class="screen" style="justify-content: flex-start; padding-top: 60px;">
+        <h2 style="text-align: center; border: none; font-size: 1.5rem; margin-bottom: 40px;">Active Roster</h2>
+        <div id="user-list-container" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; max-height: 50vh;"></div>
+        <button class="num-btn clear" style="margin-top: 50px; padding: 15px 40px; background: transparent; border-color: #525252; color: #a1a1aa;" onclick="switchScreen('admin-screen')">Back to Command Node</button>
+    </div>
+
+    <!-- 5. REGISTER PERSONNEL SCREEN -->
+    <div id="register-screen" class="screen" style="justify-content: flex-start; padding-top: 60px;">
+        <h2 style="text-align: center; border: none; font-size: 1.5rem; margin-bottom: 40px;">Add New Personnel</h2>
+        
+        <div class="form-group"><div class="form-label">Full Name</div><div class="custom-input focused" id="reg-name" onclick="setFocus('reg-name')"></div></div>
+        <div class="form-group"><div class="form-label">Assigned Department</div><div class="custom-input" id="reg-dept" onclick="setFocus('reg-dept')"></div></div>
+        <div class="form-group"><div class="form-label">4-Digit Access Code</div><div class="custom-input" id="reg-pin" onclick="setFocus('reg-pin')"></div></div>
+
+        <div class="keyboard">
+            <div class="key-row">
+                <button class="key" onclick="typeKey('1')">1</button><button class="key" onclick="typeKey('2')">2</button><button class="key" onclick="typeKey('3')">3</button><button class="key" onclick="typeKey('4')">4</button><button class="key" onclick="typeKey('5')">5</button><button class="key" onclick="typeKey('6')">6</button><button class="key" onclick="typeKey('7')">7</button><button class="key" onclick="typeKey('8')">8</button><button class="key" onclick="typeKey('9')">9</button><button class="key" onclick="typeKey('0')">0</button>
+            </div>
+            <div class="key-row">
+                <button class="key" onclick="typeKey('Q')">Q</button><button class="key" onclick="typeKey('W')">W</button><button class="key" onclick="typeKey('E')">E</button><button class="key" onclick="typeKey('R')">R</button><button class="key" onclick="typeKey('T')">T</button><button class="key" onclick="typeKey('Y')">Y</button><button class="key" onclick="typeKey('U')">U</button><button class="key" onclick="typeKey('I')">I</button><button class="key" onclick="typeKey('O')">O</button><button class="key" onclick="typeKey('P')">P</button>
+            </div>
+            <div class="key-row">
+                <button class="key" onclick="typeKey('A')">A</button><button class="key" onclick="typeKey('S')">S</button><button class="key" onclick="typeKey('D')">D</button><button class="key" onclick="typeKey('F')">F</button><button class="key" onclick="typeKey('G')">G</button><button class="key" onclick="typeKey('H')">H</button><button class="key" onclick="typeKey('J')">J</button><button class="key" onclick="typeKey('K')">K</button><button class="key" onclick="typeKey('L')">L</button>
+            </div>
+            <div class="key-row">
+                <button class="key" onclick="typeKey('Z')">Z</button><button class="key" onclick="typeKey('X')">X</button><button class="key" onclick="typeKey('C')">C</button><button class="key" onclick="typeKey('V')">V</button><button class="key" onclick="typeKey('B')">B</button><button class="key" onclick="typeKey('N')">N</button><button class="key" onclick="typeKey('M')">M</button>
+            </div>
+            <div class="key-row" style="margin-top: 10px;">
+                <button class="key wide" style="background-color: #525252;" onclick="switchScreen('admin-screen')">Cancel</button>
+                <button class="key wide" style="flex: 2;" onclick="typeKey(' ')">SPACE</button>
+                <button class="key wide" onclick="backspace()">BACK</button>
+                <button class="key wide" style="background-color: #dc2626;" onclick="submitRegistration()">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. ORDER SCREEN -->
+    <div id="order-screen" class="screen">
+        <div class="top-bar">
+            <div>
+                <div class="user-greeting">Authorized Agent: <span id="display-user-name">Unknown</span></div>
+                <div class="user-greeting">Department: <span id="display-user-dept">Unknown</span></div>
+            </div>
+            <button class="num-btn clear" style="padding: 10px 20px; font-size: 0.9rem; background: transparent; border-color: #525252; color: #a1a1aa;" onclick="resetKiosk()">LOGOUT SESSION</button>
+        </div>
+
+        <div class="menu-section">
+            <h2>Select Facility Services</h2>
+            <div class="menu-grid">
+                <button class="menu-btn" onclick="addAmount(35.00)"><span class="service-title">Hot Desk Day Pass</span><span class="price-tag">£35.00</span></button>
+                <button class="menu-btn" onclick="addAmount(80.00)"><span class="service-title">Executive Meeting Room</span><span class="price-tag">£80.00</span></button>
+                <button class="menu-btn" onclick="addAmount(150.00)"><span class="service-title">Standard Legal Retainer</span><span class="price-tag">£150.00</span></button>
+                <button class="menu-btn" onclick="addAmount(15.00)"><span class="service-title">Premium Printing Credits</span><span class="price-tag">£15.00</span></button>
+            </div>
+        </div>
+
+        <div class="cart-section">
+            <h2>Invoice Billing</h2>
+            <div class="invoice-label">Total Amount Due</div>
+            <div class="total-display" id="total-display">£0.00</div>
+            
+            <div class="invoice-label" style="text-align: left; margin-top: auto;">Custom Amount</div>
+            <div class="numpad">
+                <button class="num-btn" onclick="padInput('1')">1</button><button class="num-btn" onclick="padInput('2')">2</button><button class="num-btn" onclick="padInput('3')">3</button>
+                <button class="num-btn" onclick="padInput('4')">4</button><button class="num-btn" onclick="padInput('5')">5</button><button class="num-btn" onclick="padInput('6')">6</button>
+                <button class="num-btn" onclick="padInput('7')">7</button><button class="num-btn" onclick="padInput('8')">8</button><button class="num-btn" onclick="padInput('9')">9</button>
+                <button class="num-btn clear" onclick="clearAmount()">CLR</button><button class="num-btn" onclick="padInput('0')">0</button><button class="num-btn" onclick="padInput('00')">00</button>
+            </div>
+            <button id="pay-btn" class="pay-btn" onclick="showPaymentMethods()" disabled>Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- 7. PAYMENT METHOD SELECTION -->
+    <div id="payment-method-screen" class="screen">
+        <h2 style="text-align: center; border: none; margin-bottom: 20px;">Select Payment Method</h2>
+        <div class="menu-grid" style="max-width: 600px; margin: 0 auto; gap: 30px;">
+            
+            <!-- NEW: IDs added to the physical card button so we can grey it out -->
+            <button class="menu-btn" id="btn-card-pay" style="height: 240px; align-items: center; justify-content: center; background-color: #0a0a0a; transition: 0.3s;" onclick="startCardPayment()">
+                <div style="font-size: 3rem; margin-bottom: 20px; color: #dc2626;">◆</div>
+                <span class="service-title" id="card-pay-text" style="text-align: center; text-transform: uppercase; letter-spacing: 2px;">Credit / Debit / Mobile<br><span style="font-size: 0.8rem; font-weight: 300; color: #737373; margin-top: 10px; display: block;">Tap Card, Apple, or Google Pay</span></span>
+            </button>
+
+            <button class="menu-btn" style="height: 240px; align-items: center; justify-content: center; background-color: #0a0a0a;" onclick="startQRPayment()">
+                <div style="font-size: 3rem; margin-bottom: 20px; color: #dc2626;">◇</div>
+                <span class="service-title" style="text-align: center; text-transform: uppercase; letter-spacing: 2px;">Digital Wallet<br><span style="font-size: 0.8rem; font-weight: 300; color: #737373; margin-top: 10px; display: block;">Scan QR to pay securely</span></span>
+            </button>
+        </div>
+        <button class="num-btn clear" style="margin-top: 60px; padding: 15px 40px; background: transparent; border-color: #ef4444;" onclick="switchScreen('order-screen')">Back</button>
+    </div>
+
+    <!-- 8. PROCESSING: NFC TERMINAL -->
+    <div id="card-processing-screen" class="screen">
+        <div class="status-title">Hardware Active</div>
+        <div class="status-sub">Tap your card, Apple Pay, or Google Pay on the secure module below.</div>
+        <div class="spinner"></div>
+        <button class="num-btn clear" style="margin-top: 60px; padding: 15px 40px; background: transparent; border-color: #ef4444;" onclick="cancelActivePayment()">Terminate Connection</button>
+    </div>
+
+    <!-- 9. PROCESSING: QR WALLET -->
+    <div id="qr-processing-screen" class="screen">
+        <div class="status-title">Scan to Pay</div>
+        <div class="status-sub" style="margin-bottom: 50px;">Scan the QR code below using your mobile device.</div>
+        <img id="qr-code-img" src="" alt="QR Code" style="border: 8px solid #ffffff; border-radius: 4px;">
+        <button class="num-btn clear" style="margin-top: 60px; padding: 15px 40px; background: transparent; border-color: #ef4444;" onclick="cancelActivePayment()">Terminate Connection</button>
+    </div>
+
+    <!-- 10. SUCCESS SCREEN -->
+    <div id="success-screen" class="screen">
+        <div style="font-size: 4rem; color: #dc2626; margin-bottom: 20px;">◆</div>
+        <div class="status-title">Payment Successful</div>
+        <div class="status-sub">Thank you for your business.</div>
+        <div class="status-sub" style="margin-top: 60px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">Resetting terminal...</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        // --- NEW: DYNAMIC HARDWARE BUTTON LOCK ---
+        socket.on('terminal_status_update', (data) => {
+            const cardBtn = document.getElementById('btn-card-pay');
+            const cardText = document.getElementById('card-pay-text');
+            
+            if (data.online) {
+                // Unlock the button
+                cardBtn.disabled = false;
+                cardBtn.style.opacity = '1';
+                cardBtn.style.cursor = 'pointer';
+                cardText.innerHTML = `Credit / Debit / Mobile<br><span style="font-size: 0.8rem; font-weight: 300; color: #737373; margin-top: 10px; display: block;">Tap Card, Apple, or Google Pay</span>`;
+            } else {
+                // Grey out the button and disable clicking
+                cardBtn.disabled = true;
+                cardBtn.style.opacity = '0.3';
+                cardBtn.style.cursor = 'not-allowed';
+                cardText.innerHTML = `Hardware Offline<br><span style="font-size: 0.8rem; font-weight: 300; color: #dc2626; margin-top: 10px; display: block;">Connection Severed</span>`;
+            }
+        });
+
+        function showNotification(message, isSuccess = false) {
+            const toast = document.getElementById('notification-toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            msgEl.innerText = message;
+            if (isSuccess) { toast.classList.add('success'); iconEl.innerText = '☑️'; } 
+            else { toast.classList.remove('success'); iconEl.innerText = '⚠️'; }
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 4000);
+        }
+
+        function disconnectTerminal() {
+            socket.emit('admin_command_terminal', { command: 'disconnect' });
+            showNotification("Severing hardware connection...");
+        }
+
+        function reconnectTerminal() {
+            socket.emit('admin_command_terminal', { command: 'reconnect' });
+            showNotification("Restoring hardware connection...", true);
+        }
+
+        let currentPin = "";
+        
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function resetKiosk() {
+            clearAmount(); clearPin(); clearRegistrationForm(); stopPaymentTimer();
+            switchScreen('start-screen');
+        }
+
+        function enterPin(num) {
+            if (currentPin.length < 4) {
+                currentPin += num;
+                document.getElementById(`dot-${currentPin.length}`).classList.add('filled');
+            }
+            if (currentPin.length === 4) { setTimeout(() => { socket.emit('login_attempt', currentPin); }, 200); }
+        }
+
+        function clearPin() {
+            currentPin = "";
+            for(let i=1; i<=4; i++) { document.getElementById(`dot-${i}`).classList.remove('filled'); }
+        }
+
+        socket.on('login_success', (user) => {
+            if (user.role === 'admin') { switchScreen('admin-screen'); } 
+            else {
+                document.getElementById('display-user-name').innerText = user.name;
+                document.getElementById('display-user-dept').innerText = user.department;
+                switchScreen('order-screen');
+            }
+            clearPin();
+        });
+
+        socket.on('login_failed', (msg) => { showNotification(msg); clearPin(); });
+
+        function openManageUsers() { socket.emit('get_users'); switchScreen('manage-screen'); }
+
+        socket.on('user_list', (users) => {
+            const container = document.getElementById('user-list-container');
+            container.innerHTML = '';
+            for (const pin in users) {
+                if (pin === '0000') continue; 
+                const user = users[pin];
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `
+                    <div style="display: flex; flex-direction: column;">
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-dept">${user.department} &nbsp;|&nbsp; PIN: ${pin}</div>
+                    </div>
+                    <button class="del-btn" onclick="deleteUser('${pin}')">REMOVE</button>
+                `;
+                container.appendChild(div);
+            }
+            if (container.innerHTML === '') { container.innerHTML = '<div style="color: #737373; margin-top: 20px; text-align: center;">No personnel registered yet.</div>'; }
+        });
+
+        function deleteUser(pin) { socket.emit('delete_user', pin); }
+
+        let activeInput = 'reg-name';
+
+        function setFocus(id) {
+            document.querySelectorAll('.custom-input').forEach(el => el.classList.remove('focused'));
+            document.getElementById(id).classList.add('focused');
+            activeInput = id;
+        }
+
+        function typeKey(char) {
+            const el = document.getElementById(activeInput);
+            if (activeInput === 'reg-pin') {
+                if (!/^\d$/.test(char)) return; 
+                if (el.textContent.length >= 4) return; 
+            }
+            el.textContent += char;
+        }
+
+        function backspace() {
+            const el = document.getElementById(activeInput);
+            el.textContent = el.textContent.slice(0, -1);
+        }
+
+        function clearRegistrationForm() {
+            document.getElementById('reg-name').textContent = "";
+            document.getElementById('reg-dept').textContent = "";
+            document.getElementById('reg-pin').textContent = "";
+            setFocus('reg-name');
+        }
+
+        function submitRegistration() {
+            const name = document.getElementById('reg-name').textContent.trim();
+            const dept = document.getElementById('reg-dept').textContent.trim();
+            const pin = document.getElementById('reg-pin').textContent.trim();
+            if (!name || !dept || pin.length !== 4) {
+                showNotification("Please fill all fields and ensure PIN is exactly 4 digits."); return;
+            }
+            socket.emit('register_user', { name: name, department: dept, pin: pin });
+        }
+
+        socket.on('register_success', (msg) => { showNotification(msg, true); clearRegistrationForm(); switchScreen('admin-screen'); });
+        socket.on('register_failed', (msg) => { showNotification(msg); });
+
+        let currentCents = 0; let currentSessionId = null;
+
+        function updateDisplay() {
+            const displayValue = (currentCents / 100).toFixed(2);
+            document.getElementById("total-display").innerText = "£" + displayValue;
+            document.getElementById("pay-btn").disabled = currentCents === 0;
+        }
+
+        function addAmount(dollars) { currentCents += Math.round(dollars * 100); updateDisplay(); }
+        function padInput(num) {
+            const currentStr = currentCents.toString();
+            if (currentStr === "0") { currentCents = parseInt(num); } else { currentCents = parseInt(currentStr + num); }
+            updateDisplay();
+        }
+        function clearAmount() { currentCents = 0; updateDisplay(); }
+        function showPaymentMethods() { if (currentCents === 0) return; switchScreen('payment-method-screen'); }
+
+        let paymentTimeoutTimer = null;
+        const TIMEOUT_DURATION = 30000; 
+
+        function startPaymentTimer() {
+            clearTimeout(paymentTimeoutTimer);
+            paymentTimeoutTimer = setTimeout(() => {
+                currentSessionId = null; socket.emit('cancel_payment'); 
+                showNotification("Payment session timed out. Please try again.");
+                switchScreen('order-screen');
+            }, TIMEOUT_DURATION);
+        }
+
+        function stopPaymentTimer() { clearTimeout(paymentTimeoutTimer); }
+
+        function cancelActivePayment() {
+            stopPaymentTimer(); currentSessionId = null; socket.emit('cancel_payment'); 
+            showNotification("Authorization cancelled."); switchScreen('order-screen');
+        }
+
+        function startCardPayment() {
+            switchScreen('card-processing-screen');
+            socket.emit("create_charge", { amount: currentCents });
+            startPaymentTimer();
+        }
+
+        socket.on("payment_success", (data) => {
+            stopPaymentTimer(); switchScreen('success-screen');
+            setTimeout(() => { resetKiosk(); }, 5000);
+        });
+
+        socket.on("payment_failed", (errorMsg) => {
+            stopPaymentTimer(); const errorString = String(errorMsg);
+            if (errorString.includes("used a real card while testing")) {
+                switchScreen('success-screen'); setTimeout(() => { resetKiosk(); }, 5000);
+            } else if (errorString.toLowerCase().includes("cancel")) {
+                console.log("Terminal confirmed cancellation.");
+            } else {
+                showNotification("Payment Declined: " + errorString); switchScreen('order-screen'); 
+            }
+        });
+
+        function startQRPayment() {
+            currentSessionId = Date.now().toString(); const serverIp = "192.168.100.7"; 
+            const paymentUrl = `http://${serverIp}:3000/ewallet.html?amount=${currentCents}&session=${currentSessionId}`;
+            document.getElementById("qr-code-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentUrl)}&margin=10`;
+            switchScreen('qr-processing-screen'); startPaymentTimer();
+        }
+
+        socket.on("qr_payment_success", (data) => {
+            if (data.session === currentSessionId) {
+                stopPaymentTimer(); switchScreen('success-screen');
+                setTimeout(() => { resetKiosk(); }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
