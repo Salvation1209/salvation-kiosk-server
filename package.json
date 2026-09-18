@@ -9,5 +9,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^18.0.0",
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3",
+    "stripe": "^22.6.2"
+  }
 }
